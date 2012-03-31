@@ -38,8 +38,8 @@ static NSLock* __requestsLock;
 
 @implementation EGOHTTPRequest
 @synthesize url=_URL, response=_response, delegate=_delegate, timeoutInterval=_timeoutInterval, 
-			didFinishSelector=_didFinishSelector, didFailSelector=_didFailSelector, error=_error,
-			cancelled=isCancelled, started=isStarted, finished=isFinished, requestMethod=_requestMethod,
+			didFinishSelector=_didFinishSelector, didFailSelector=_didFailSelector, didCancelSelector=_didCancelSelector,
+            error=_error, cancelled=isCancelled, started=isStarted, finished=isFinished, requestMethod=_requestMethod,
 			requestBody=_requestBody;
 
 - (id)initWithURL:(NSURL*)aURL {
@@ -56,6 +56,7 @@ static NSLock* __requestsLock;
 		self.timeoutInterval = 60;
 		self.didFinishSelector = @selector(requestDidFinish:);
 		self.didFailSelector = @selector(requestDidFail:withError:);
+        self.didCancelSelector = @selector(requestDidCancel:);
 	}
 	
 	return self;
@@ -171,6 +172,12 @@ static NSLock* __requestsLock;
 	
 	if(isCancelled) {
 		[_connection cancel];
+        
+        if([self.delegate respondsToSelector:self.didCancelSelector]) {
+            [self.delegate performSelector:self.didCancelSelector withObject:self];
+        }
+        
+        [[self class] cleanUpRequest:self];
 	}
 
 	[_backgroundThread release];
@@ -213,8 +220,6 @@ static NSLock* __requestsLock;
 	isFinished = YES;
 	
 	// No need to call cancel because flagging as cancelled will cancel the request in the thread.
-	
-	[[self class] cleanUpRequest:self];
 }
 
 - (NSData*)responseData {

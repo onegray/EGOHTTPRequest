@@ -39,6 +39,7 @@
 	
 	SEL _didFinishSelector;
 	SEL _didFailSelector;
+	SEL _didCancelSelector;
 	
 	id _delegate;
 	
@@ -82,6 +83,7 @@
 @property(assign) id delegate;
 @property(assign) SEL didFinishSelector;
 @property(assign) SEL didFailSelector;
+@property(assign) SEL didCancelSelector;
 
 @property(nonatomic,assign) NSTimeInterval timeoutInterval; // Default is 30 seconds
 
